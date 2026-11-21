@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/criador", "destination": "/index.html" },
+    { "source": "/equipe/:slug([a-z0-9-]{1,40})", "destination": "/index.html" },
+    { "source": "/:slug([a-z0-9-]{1,40})", "destination": "/index.html" }
+  ]
+}

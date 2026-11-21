@@ -1,0 +1,322 @@
+rules_version = '2';
+
+// ============================================================================
+// Yaudimtec · regras das coleções pf_
+// Se o projeto delivery-67d14 já tem outras regras, copie só os blocos
+// "match /pf_..." (e as funções) para dentro do seu "match /databases/{database}/documents".
+// Depois: Firebase Console → Firestore → Regras → Publicar.
+//
+// Criador: custom claim pfCriador == true (recomendado) OU o Google verificado
+// com o e-mail abaixo. Troque o e-mail se mudar o PF_CRIADOR_EMAIL do index.html.
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- funções ----------
+    function signedIn() {
+      return request.auth != null;
+    }
+    function mail() {
+      return request.auth.token.get('email', '').lower();
+    }
+    function verified() {
+      return signedIn() && request.auth.token.get('email_verified', false) == true;
+    }
+    function isCriador() {
+      return signedIn() && (
+        request.auth.token.get('pfCriador', false) == true ||
+        (verified() && mail() == 'edinaldooliveiradesouza@gmail.com')
+      );
+    }
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    // função do funcionário: o DONO grava "papel" (kds | mesas | ent) ao aprovar
+    function eqDoc(oid) {
+      return get(/databases/$(database)/documents/pf_lojas/$(oid)/equipe/$(request.auth.uid)).data;
+    }
+    function hasRole(oid, papel) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/pf_lojas/$(oid)/equipe/$(request.auth.uid))
+        && eqDoc(oid).status == 'aprovado'
+        && eqDoc(oid).get('papel', '') == papel;
+    }
+    function isCozinha(oid) { return hasRole(oid, 'kds'); }
+    function isGarcom(oid)  { return hasRole(oid, 'mesas'); }
+    function isEntrega(oid) { return hasRole(oid, 'ent'); }
+    function isLoja(oid)    { return hasRole(oid, 'ped'); }  // Loja da equipe (gerente/balcão): LÊ e OPERA pedidos (Pix, status, forma de pagamento) e o caixa; nunca altera dados da loja, preços, equipe nem exclui pedidos
+    function isStaff(oid)   { return isCozinha(oid) || isGarcom(oid) || isEntrega(oid); }
+
+    // ---------- endereço da loja (/nome-da-loja) ----------
+    match /pf_slugs/{slug} {
+      allow get: if true;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isCriador());
+    }
+
+    // ---------- loja: cópia pública (o cliente e a função api/loja.js leem) ----------
+    match /pf_lojas_publicas/{uid} {
+      allow get: if true;
+      allow list: if isCriador();
+      allow create, update, delete: if isOwner(uid);
+    }
+
+    // ---------- loja: dados privados do dono ----------
+    match /pf_lojas/{uid} {
+      allow read: if isOwner(uid) || isCriador();
+      allow create, update, delete: if isOwner(uid);
+
+      // estoque reservado: contador por produto, mantido SÓ pelo servidor (/api/pedido e /api/baixa, conta de serviço, que ignora as regras).
+      // O dono pode ler (conferência); ninguém grava daqui. O cliente não lê: o carrinho usa o estoque publicado e o 409 do servidor.
+      match /reservado/{pid} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+
+      // pedidos: o CLIENTE NÃO GRAVA AQUI. O pedido dele só entra por /api/pedido (conta de serviço, que confere o preço);
+      // dono opera tudo; cada função faz só a sua parte
+      // (fase: novo → preparo → pronto → entregue; "st" é o status do pagamento e ninguém da equipe altera)
+      match /pedidos/{pid} {
+        // pedido de mesa/balcão do garçom: também só pelo servidor (/api/mesa), que recalcula o preço e reserva o estoque.
+        // O garçom NÃO grava pedido direto (auditoria A-03): só o dono cria aqui.
+        allow create: if isOwner(uid);
+        // LEITURA POR FUNÇÃO (a consulta do app precisa ter o mesmo filtro, senão o Firestore nega a lista toda):
+        //   garçom   → where garcom_uid == uid
+        //   cozinha  → where fase in ['novo','preparo','pronto'] e st == 'ok' (Pix pendente não aparece; B-05)
+        //   entrega  → duas consultas: (a) ent == 'entrega', fase == 'pronto', st == 'ok', ent_uid == ''  (disponíveis, sem telefone/endereço)
+        //              (b) ent == 'entrega', ent_uid == uid, fase in ['saiu','pronto'], st == 'ok'  (as dele)
+        // st == 'ok' também é checado AQUI nas regras: um app adulterado não lê pedido ainda não liberado.
+        allow read: if isOwner(uid)
+          || isLoja(uid)
+          || (isGarcom(uid) && resource.data.garcom_uid == request.auth.uid)
+          || (isCozinha(uid) && resource.data.get('st', '') == 'ok' && resource.data.fase in ['novo', 'preparo', 'pronto'])
+          // M-06: o entregador lê (a) entregas prontas SEM entregador (para pegar) e (b) as que são DELE; nunca as de outro entregador
+          || (isEntrega(uid) && resource.data.get('st', '') == 'ok' && resource.data.ent == 'entrega'
+              && ((resource.data.fase == 'pronto' && resource.data.get('ent_uid', '') == '')
+                  || (resource.data.get('ent_uid', '') == request.auth.uid && resource.data.fase in ['saiu', 'pronto'])));
+        allow update: if isOwner(uid)
+          // COZINHA: só a fase, só para frente (novo→preparo, preparo→pronto)
+          || (isCozinha(uid)
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fase', 'iniEm', 'prontoEm', 'liberadoEm'])
+              // liberadoEm = hora do servidor (serverTimestamp), só junto do "pronto"
+              && (!('liberadoEm' in request.resource.data.diff(resource.data).affectedKeys())
+                  || (request.resource.data.fase == 'pronto' && request.resource.data.liberadoEm == request.time))
+              && ((resource.data.get('fase', 'novo') == 'novo' && request.resource.data.fase == 'preparo')
+                  || (resource.data.fase == 'preparo' && request.resource.data.fase == 'pronto')))
+          // GARÇOM: só pedidos dele; serve (pronto→entregue) e fecha a conta; nunca marca "pronto"
+          || (isGarcom(uid)
+              && resource.data.get('garcom_uid', '') == request.auth.uid
+              && request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['fase', 'fm', 'pg', 'fechada', 'fechadaEm', 'fechadaPor', 'contaModo'])
+              // conta já fechada: o garçom só pode servir (fase); forma de pagamento e fechamento ficam travados (B-01)
+              && (resource.data.get('fechada', false) != true
+                  || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fase']))
+              && (!('fase' in request.resource.data.diff(resource.data).affectedKeys())
+                  || (resource.data.fase == 'pronto' && request.resource.data.fase == 'entregue')))
+          // ENTREGAS (M-06): PEGAR a entrega (pronto, sem entregador → saiu, gravando o próprio uid em ent_uid, atômico: se outro pegou antes, a regra nega)
+          // e ENTREGAR só a que é dele (saiu → entregue). Nunca mexe em entrega de outro entregador.
+          || (isEntrega(uid)
+              && resource.data.get('ent', '') == 'entrega'
+              && ((resource.data.get('st', '') == 'ok'
+                   && resource.data.fase == 'pronto'
+                   && resource.data.get('ent_uid', '') == ''
+                   && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fase', 'ent_uid'])
+                   && request.resource.data.fase == 'saiu'
+                   && request.resource.data.ent_uid == request.auth.uid)
+                  || (resource.data.get('ent_uid', '') == request.auth.uid
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fase'])
+                      && resource.data.fase == 'saiu' && request.resource.data.fase == 'entregue')))
+          // LOJA (gerente/balcão): confirma o Pix (pend → ok), muda o status e marca a forma de pagamento/conta; nada além disso
+          || (isLoja(uid)
+              && request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['fase', 'st', 'fm', 'pg', 'fechada', 'fechadaEm', 'fechadaPor', 'contaModo', 'iniEm', 'prontoEm', 'liberadoEm'])
+              && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['st'])
+                  || (resource.data.get('st', '') == 'pend' && request.resource.data.st == 'ok'))
+              && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fase'])
+                  || request.resource.data.fase in ['novo', 'preparo', 'pronto', 'saiu', 'entregue'])
+              && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['liberadoEm'])
+                  || (request.resource.data.fase == 'pronto' && request.resource.data.liberadoEm == request.time)));
+        allow delete: if isOwner(uid);
+
+        // M-06: telefone e endereço do cliente ficam AQUI, fora do documento do pedido (que a cozinha lê inteiro).
+        // Lê: dono, Loja da equipe e o entregador DESTA entrega (ent_uid == ele). Cozinha e garçom não leem.
+        // Grava: o servidor (/api/pedido, conta de serviço) e o dono; a equipe nunca.
+        match /contato/{d} {
+          allow read: if isOwner(uid)
+            || isLoja(uid)
+            || (isEntrega(uid)
+                && get(/databases/$(database)/documents/pf_lojas/$(uid)/pedidos/$(pid)).data.get('ent_uid', '') == request.auth.uid);
+          allow create, update, delete: if isOwner(uid);
+        }
+      }
+
+      // caixa (abertura, suprimento, sangria, fechamento): um documento só ('estado'), em JSON dentro de 'data'.
+      // O dono e a Loja da equipe (gerente/balcão) leem e gravam; ninguém mais.
+      match /caixa/{cid} {
+        allow read: if isOwner(uid) || isLoja(uid);
+        // gravação SÓ pelo servidor (/api/caixa): cada operação é aplicada em transação, com autor e horário do servidor, e o
+        // fechamento vira o documento imutável h-{id}. O app não regrava mais o caixa inteiro (auditoria M-05).
+        // Única exceção: o dono cria o 'estado' inicial (migra o caixa que só existia no aparelho); depois disso nada altera direto.
+        allow create: if isOwner(uid) && cid == 'estado';
+        allow update, delete: if false;
+      }
+
+      // comissão do garçom: calculada e gravada SÓ pelo servidor (/api/mesa), com o total dos pedidos fechados e o % da loja (auditoria A-04).
+      // O garçom apenas lê as próprias; a coleção comissoes_pedidos (marca de "este pedido já gerou comissão") é só do servidor.
+      match /comissoes/{cid} {
+        allow read: if isOwner(uid)
+          || (isGarcom(uid) && resource.data.garcom_uid == request.auth.uid);
+        allow create: if isOwner(uid);
+        allow update, delete: if isOwner(uid);
+      }
+
+      // equipe: o funcionário pede acesso (pendente); só o dono aprova
+      match /equipe/{mid} {
+        allow get: if isOwner(uid) || (signedIn() && request.auth.uid == mid);
+        allow list: if isOwner(uid);
+        allow create: if signedIn()
+          && request.auth.uid == mid
+          && request.resource.data.uid == mid
+          && request.resource.data.status == 'pendente'
+          && !('papel' in request.resource.data)
+          // convite válido e DESTA loja (token do convite gravado pelo dono): não dá para pedir acesso em loja alheia (B-06)
+          && request.resource.data.get('token', null) is string
+          && exists(/databases/$(database)/documents/pf_convites/$(request.resource.data.token))
+          && get(/databases/$(database)/documents/pf_convites/$(request.resource.data.token)).data.uid == uid
+          && get(/databases/$(database)/documents/pf_convites/$(request.resource.data.token)).data.get('exp', 0) > request.time.toMillis();
+        allow update: if isOwner(uid)
+          || (signedIn() && request.auth.uid == mid
+              && resource.data.status != 'aprovado'
+              && request.resource.data.status == 'pendente'
+              && request.resource.data.get('papel', '') == resource.data.get('papel', ''));
+        allow delete: if isOwner(uid);
+      }
+    }
+
+    // ---------- rastreio do pedido (cliente sem login) ----------
+    // o documento é só o status (sem telefone nem endereço); o id é o tracking_token (128 bits, não adivinhável)
+    match /pf_rastreio/{tk} {
+      allow get: if true;
+      allow list: if false;
+      // só o servidor (/api/pedido, conta de serviço) cria o rastreio
+      allow create: if false;
+      // dono: fase e pagamento. Equipe: SÓ a fase, e só a transição da própria função (nunca o pagamento "st")
+      allow update: if (isOwner(resource.data.oid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fase', 'st', 'upd']))
+        || (isStaff(resource.data.oid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fase', 'upd'])
+          // o rastreio só acompanha o pedido: a fase nova tem de ser a que o PEDIDO já tem (o app grava o pedido primeiro) (M-04)
+          && get(/databases/$(database)/documents/pf_lojas/$(resource.data.oid)/pedidos/$(string(resource.data.id))).data.get('fase', '') == request.resource.data.fase
+          && ((isCozinha(resource.data.oid)
+                && ((resource.data.get('fase', 'novo') == 'novo' && request.resource.data.fase == 'preparo')
+                    || (resource.data.fase == 'preparo' && request.resource.data.fase == 'pronto')))
+              // garçom: só o pedido DELE (garcom_uid), nunca o de qualquer pessoa da loja (M-04)
+              || (isGarcom(resource.data.oid)
+                && get(/databases/$(database)/documents/pf_lojas/$(resource.data.oid)/pedidos/$(string(resource.data.id))).data.get('garcom_uid', '') == request.auth.uid
+                && resource.data.fase == 'pronto' && request.resource.data.fase == 'entregue')
+              // entrega (M-06): só o entregador DONO da entrega (ent_uid do pedido) move o rastreio; o pedido já foi gravado primeiro
+              || (isEntrega(resource.data.oid)
+                && resource.data.get('ent', '') == 'entrega'
+                && get(/databases/$(database)/documents/pf_lojas/$(resource.data.oid)/pedidos/$(string(resource.data.id))).data.get('ent_uid', '') == request.auth.uid
+                && ((resource.data.fase == 'pronto' && request.resource.data.fase == 'saiu')
+                    || (resource.data.fase == 'saiu' && request.resource.data.fase == 'entregue')))))
+        // Loja da equipe: fase e confirmação do Pix (st só vira 'ok')
+        || (isLoja(resource.data.oid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fase', 'st', 'upd'])
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['st']) || request.resource.data.st == 'ok')
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fase'])
+              || request.resource.data.fase in ['novo', 'preparo', 'pronto', 'saiu', 'entregue']));
+      allow delete: if isOwner(resource.data.oid);
+    }
+
+    // ---------- Criador: conta motoboys de todas as lojas (aba Marketplace) ----------
+    match /{path=**}/equipe/{mid} {
+      allow read: if isCriador();
+    }
+
+    // ---------- convites da equipe (token e s-<endereço>) ----------
+    match /pf_convites/{cid} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if isOwner(request.resource.data.uid);
+      allow update: if isOwner(request.resource.data.uid) && resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // ---------- contas dos empresários (assinatura) ----------
+    match /pf_contas/{uid} {
+      allow get: if isOwner(uid) || isCriador();
+      allow list: if isCriador();
+      allow create: if isCriador()
+        || (isOwner(uid)
+            && request.resource.data.uid == uid
+            && request.resource.data.plano.st == 'none');
+      // o dono só pode marcar "paguei" (pend); aprovar/recusar é do Criador
+      allow update: if isCriador()
+        || (isOwner(uid)
+            // o dono só mexe nos dados de contato e no "paguei"; nunca em uid, ref, criadoEm nem em campo novo de controle (auditoria 7.2)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'phone', 'slug', 'plano'])
+            && request.resource.data.get('uid', '') == resource.data.get('uid', '')
+            && request.resource.data.get('ref', '') == resource.data.get('ref', '')
+            && (request.resource.data.get('plano', null) == resource.data.get('plano', null)
+                || (request.resource.data.plano.st == 'pend'
+                    && request.resource.data.plano.ate == resource.data.plano.ate)));
+      allow delete: if isCriador();
+    }
+
+    // ---------- afiliados ----------
+    match /pf_afiliados/{aid} {
+      allow read: if isCriador()
+        || (verified() && resource.data.get('email', '') == mail());
+      // o Criador cadastra; o próprio afiliado também pode, com saldo zerado
+      // (o id do documento é o código: um código nunca se repete)
+      allow create: if isCriador()
+        || (verified()
+            && request.resource.data.email == mail()
+            && request.resource.data.uid == request.auth.uid
+            && aid == request.resource.data.codigo
+            && request.resource.data.saldo == 0
+            && request.resource.data.pago == 0
+            && request.resource.data.indicados == 0
+            && request.resource.data.keys().hasOnly(['id', 'nome', 'wpp', 'email', 'uid', 'pix', 'codigo', 'saldo', 'pago', 'indicados', 'criadoEm', 'origem']));
+      // o afiliado edita só os próprios dados de contato; saldo e baixa são do Criador
+      allow update: if isCriador()
+        || (verified()
+            && resource.data.get('email', '') == mail()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'wpp', 'pix']));
+      allow delete: if isCriador();
+
+      match /vendas/{vid} {
+        allow read: if isCriador()
+          || (verified() && get(/databases/$(database)/documents/pf_afiliados/$(aid)).data.get('email', '') == mail());
+        allow write: if isCriador();
+      }
+      match /baixas/{bid} {
+        allow read: if isCriador()
+          || (verified() && get(/databases/$(database)/documents/pf_afiliados/$(aid)).data.get('email', '') == mail());
+        allow write: if isCriador();
+      }
+    }
+
+    // ---------- suporte (Nível 3) ----------
+    match /pf_tickets/{tid} {
+      allow read, write: if isCriador();
+    }
+
+    // ---------- configurações ----------
+    // flags e dados de cobrança do Criador: qualquer logado lê, só o Criador escreve
+    match /pf_config/{cid} {
+      // só o Criador e empresários com conta lêem (funcionário, afiliado e visitante logado não): M-07
+      allow read: if isCriador()
+        || (signedIn() && exists(/databases/$(database)/documents/pf_contas/$(request.auth.uid)));
+      allow write: if isCriador();
+    }
+  }
+}

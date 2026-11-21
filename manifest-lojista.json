@@ -1,0 +1,33 @@
+{
+  "id": "/loja",
+  "name": "Yaudimtec Loja",
+  "short_name": "Yaudimtec Loja",
+  "description": "Yaudimtec Loja: Pedidos e operação da loja, instalável no celular.",
+  "start_url": "/app/loja/?op=ped",
+  "scope": "/app/loja/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#b3122b",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icons/loja-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/loja-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/loja-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0d">
+<meta name="robots" content="noindex,nofollow">
+<title>Portal do Afiliado · Yaudimtec</title>
+<link rel="icon" href="/icon-192.png">
+<style>
+:root{--bg:#0b0b0d;--card:#16161a;--line:#2a2a31;--tx:#f4f4f6;--mute:#a3a3ad;--gold:#e0b43a;--ok:#34d399;--err:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(40px + env(safe-area-inset-bottom,0px))}
+.c{max-width:520px;margin:0 auto}
+h1{font-size:26px;margin:6px 0 4px}h2{font-size:20px;margin:22px 0 8px}
+.sub{color:var(--mute);margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+label{display:block;font-size:16px;color:var(--mute);margin:10px 0 4px}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0f0f12;color:var(--tx);font:inherit}
+button,.btn{display:inline-block;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-weight:600;background:var(--gold);color:#111;cursor:pointer;text-decoration:none;text-align:center}
+button.ghost,.btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--line)}
+button:disabled{opacity:.5}
+.full{width:100%;margin-top:10px}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.err{color:var(--err);min-height:1.2em;margin:8px 0 0;font-size:16px}.ok{color:var(--ok);font-size:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.k b{display:block;font-size:24px}.k span{color:var(--mute);font-size:15px}
+.k.hi{border-color:var(--gold)}
+.link{word-break:break-all;background:#0f0f12;border:1px dashed var(--line);border-radius:10px;padding:10px;font-size:16px}
+.chip{display:inline-block;font-size:14px;border-radius:99px;padding:2px 10px;border:1px solid var(--line);color:var(--mute)}
+.chip.p{background:var(--ok);color:#06281c;border-color:transparent}
+a{color:var(--gold)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="c">
+  <h1>🤝 Portal do Afiliado</h1>
+  <p class="sub">Yaudimtec · indique lojas e acompanhe suas comissões.</p>
+
+  <div id="load" class="card">Carregando…</div>
+
+  <!-- 1. login -->
+  <div id="vLogin" hidden>
+    <div class="card">
+      <b>Entre para ver o seu link e a sua carteira</b>
+      <button class="full" id="bGoogle">Entrar com Google</button>
+      <p class="sub" style="margin:14px 0 0;text-align:center">ou com e-mail e senha</p>
+      <label for="em">E-mail</label><input id="em" type="email" autocomplete="email" autocapitalize="off">
+      <label for="pw">Senha (mínimo 6 caracteres)</label><input id="pw" type="password" autocomplete="current-password">
+      <div class="tools"><button id="bEntrar" style="flex:1">Entrar</button><button class="ghost" id="bCriar" style="flex:1">Criar conta</button></div>
+      <p class="err" id="eLogin"></p>
+    </div>
+    <p class="sub" style="font-size:15px">Ainda não conhece o programa? <a href="/">Volte à página inicial</a>.</p>
+  </div>
+
+  <!-- 2. e-mail ainda não verificado -->
+  <div id="vVerif" hidden>
+    <div class="card">
+      <b>Confirme o seu e-mail</b>
+      <p class="sub" style="margin:6px 0 0">Enviamos um link de confirmação para <span id="vvEmail"></span>. Depois de confirmar, toque em “Já confirmei”.</p>
+      <div class="tools"><button id="bJa">Já confirmei</button><button class="ghost" id="bReenv">Reenviar e-mail</button><button class="ghost" data-sair>Sair</button></div>
+      <p class="err" id="eVerif"></p>
+    </div>
+  </div>
+
+  <!-- 3. cadastro de afiliado -->
+  <div id="vCad" hidden>
+    <div class="card">
+      <b>Falta pouco: complete o seu cadastro</b>
+      <label for="cn">Seu nome</label><input id="cn" maxlength="40" autocomplete="name">
+      <label for="cw">WhatsApp (com DDD)</label><input id="cw" type="tel" inputmode="tel" autocomplete="tel">
+      <label for="cp">Chave Pix para receber (opcional agora)</label><input id="cp" maxlength="80" autocapitalize="off">
+      <button class="full" id="bCad">Criar meu link de afiliado</button>
+      <p class="err" id="eCad"></p>
+      <div class="tools"><button class="ghost" data-sair>Sair</button></div>
+    </div>
+  </div>
+
+  <!-- 4. painel -->
+  <div id="vPainel" hidden>
+    <div class="row"><div><b id="pNome"></b><br><span class="sub" id="pMail" style="font-size:15px"></span></div><button class="ghost" data-sair>Sair</button></div>
+
+    <h2>Seu link exclusivo</h2>
+    <div class="card">
+      <div class="link" id="pLink"></div>
+      <div class="tools"><button id="bCopiar">Copiar link</button><a class="btn ghost" id="bZap" target="_blank" rel="noopener">Enviar no WhatsApp</a></div>
+      <p class="sub" style="font-size:15px;margin:10px 0 0">Quando alguém criar a conta pelo seu link e a assinatura for aprovada, a comissão entra na sua carteira. <span id="pCom"></span></p>
+    </div>
+
+    <h2>Carteira de comissões</h2>
+    <div class="grid">
+      <div class="k hi"><b id="kSaldo">R$ 0,00</b><span>A receber</span></div>
+      <div class="k"><b id="kPago">R$ 0,00</b><span>Já recebido</span></div>
+      <div class="k"><b id="kInd">0</b><span>Lojas indicadas</span></div>
+      <div class="k"><b id="kUlt">—</b><span>Último pagamento</span></div>
+    </div>
+
+    <h2>Histórico</h2>
+    <div id="pHist"><div class="card sub">Nenhuma comissão ainda.</div></div>
+
+    <h2>Dados para receber</h2>
+    <div class="card">
+      <label for="dn">Nome</label><input id="dn" maxlength="40">
+      <label for="dw">WhatsApp</label><input id="dw" type="tel" inputmode="tel">
+      <label for="dp">Chave Pix</label><input id="dp" maxlength="80" autocapitalize="off">
+      <button class="full" id="bSalvar">Salvar dados</button>
+      <p class="err" id="eSalvar"></p>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+"use strict";
+var CFG={apiKey:"AIzaSyCXq4-VbJUwypuC6H5jzw5cri5N4fqo-sw",authDomain:"delivery-67d14.firebaseapp.com",projectId:"delivery-67d14",storageBucket:"delivery-67d14.firebasestorage.app",messagingSenderId:"684086028448",appId:"1:684086028448:web:9e86061b8e29e947eac1c5"};
+var $=function(id){return document.getElementById(id)};
+var money=function(v){return "R$ "+(Math.round((+v||0)*100)/100).toFixed(2).replace(".",",")};
+var AF=null,USER=null;
+
+function show(id){["load","vLogin","vVerif","vCad","vPainel"].forEach(function(k){$(k).hidden=(k!==id)})}
+function msg(id,t,ok){var e=$(id);e.textContent=t||"";e.className=ok?"ok":"err"}
+function fbErr(e){var c=e&&e.code||"";
+  if(c==="auth/invalid-credential"||c==="auth/wrong-password"||c==="auth/user-not-found")return "E-mail ou senha incorretos.";
+  if(c==="auth/email-already-in-use")return "Este e-mail já tem conta. Use “Entrar”.";
+  if(c==="auth/weak-password")return "Use uma senha com 6 ou mais caracteres.";
+  if(c==="auth/invalid-email")return "E-mail inválido.";
+  if(c==="auth/popup-closed-by-user"||c==="auth/cancelled-popup-request")return "";
+  if(c==="auth/unauthorized-domain")return "Este endereço ainda não está autorizado no Firebase (Authentication → Domínios autorizados).";
+  if(c==="auth/network-request-failed")return "Sem conexão. Tente de novo.";
+  if(c==="permission-denied")return "O banco negou o acesso. Confirme que o firestore.rules foi publicado e que o e-mail está verificado.";
+  return "Não foi possível concluir. Tente de novo.";}
+
+if(!window.firebase){show("vLogin");msg("eLogin","Não foi possível carregar o login. Verifique a internet.");return}
+firebase.initializeApp(CFG);
+var auth=firebase.auth(),db=firebase.firestore();
+
+/* ---------- login ---------- */
+$("bGoogle").onclick=function(){msg("eLogin","");auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){msg("eLogin",fbErr(e))})};
+$("bEntrar").onclick=function(){var e=$("em").value.trim(),p=$("pw").value;if(!e||!p){msg("eLogin","Informe e-mail e senha.");return}msg("eLogin","");auth.signInWithEmailAndPassword(e,p).catch(function(x){msg("eLogin",fbErr(x))})};
+$("bCriar").onclick=function(){var e=$("em").value.trim(),p=$("pw").value;if(!e||p.length<6){msg("eLogin","Informe o e-mail e uma senha com 6 ou mais caracteres.");return}msg("eLogin","");
+  auth.createUserWithEmailAndPassword(e,p).then(function(r){return r.user.sendEmailVerification().catch(function(){})}).catch(function(x){msg("eLogin",fbErr(x))})};
+document.addEventListener("click",function(ev){if(ev.target.closest&&ev.target.closest("[data-sair]")){AF=null;auth.signOut()}});
+$("bJa").onclick=function(){msg("eVerif","");auth.currentUser.reload().then(function(){return auth.currentUser.getIdToken(true)}).then(function(){route(auth.currentUser)}).catch(function(e){msg("eVerif",fbErr(e))})};
+$("bReenv").onclick=function(){auth.currentUser.sendEmailVerification().then(function(){msg("eVerif","E-mail reenviado. Confira também o spam.",true)}).catch(function(e){msg("eVerif",fbErr(e))})};
+
+/* ---------- roteamento ---------- */
+auth.onAuthStateChanged(function(u){
+  USER=u;
+  if(!u||u.isAnonymous){show("vLogin");return}
+  route(u);
+});
+
+function route(u){
+  if(!u.emailVerified){$("vvEmail").textContent=u.email||"";show("vVerif");return}
+  show("load");
+  var em=String(u.email||"").toLowerCase();
+  db.collection("pf_afiliados").where("email","==",em).limit(1).get().then(function(q){
+    if(q.empty){$("cn").value=u.displayName||"";show("vCad");return}
+    AF=q.docs[0].data();AF.id=q.docs[0].id;painel();
+  }).catch(function(e){show("vLogin");msg("eLogin",fbErr(e))});
+}
+
+/* ---------- cadastro ---------- */
+function slug(x){return String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,8)}
+function rnd(n){var a="abcdefghjkmnpqrstuvwxyz23456789",o="";for(var i=0;i<n;i++)o+=a[Math.floor(Math.random()*a.length)];return o}
+$("bCad").onclick=function(){
+  var nm=$("cn").value.trim(),wp=$("cw").value.replace(/\D/g,""),px=$("cp").value.trim();
+  if(nm.length<2){msg("eCad","Informe o seu nome.");return}
+  if(wp.length<10){msg("eCad","Informe o WhatsApp com DDD.");return}
+  var u=auth.currentUser,em=String(u.email||"").toLowerCase(),cod=(slug(nm)||"afil")+rnd(4);
+  var d={id:cod,nome:nm,wpp:wp,email:em,uid:u.uid,pix:px,codigo:cod,saldo:0,pago:0,indicados:0,criadoEm:Date.now(),origem:"portal"};
+  $("bCad").disabled=true;msg("eCad","");
+  db.collection("pf_afiliados").doc(cod).set(d).then(function(){AF=d;painel()}).catch(function(e){$("bCad").disabled=false;msg("eCad",fbErr(e))});
+};
+
+/* ---------- painel ---------- */
+function linkDe(a){return location.origin+"/?ref="+a.codigo}
+function painel(){
+  $("pNome").textContent=AF.nome||"Afiliado";$("pMail").textContent=AF.email||"";
+  var lk=linkDe(AF);$("pLink").textContent=lk;
+  $("bZap").href="https://wa.me/?text="+encodeURIComponent("Quer vender mais com sua própria loja online, sem taxa por venda? Crie a sua pelo meu link: "+lk);
+  $("dn").value=AF.nome||"";$("dw").value=AF.wpp||"";$("dp").value=AF.pix||"";
+  show("vPainel");carteira();
+  db.collection("pf_config").doc("criador").get().then(function(d){var c=(d.exists&&+d.data().comissao)||50;$("pCom").textContent="Comissão: "+c+"% de cada mensalidade paga."}).catch(function(){});
+}
+function carteira(){
+  db.collection("pf_afiliados").doc(AF.id).get().then(function(d){if(d.exists){var id=AF.id;AF=d.data();AF.id=id}}).catch(function(){}).then(function(){
+    $("kSaldo").textContent=money(AF.saldo);$("kPago").textContent=money(AF.pago);$("kInd").textContent=String(+AF.indicados||0);
+    $("kUlt").textContent=AF.ultimaBaixa?new Date(AF.ultimaBaixa).toLocaleDateString("pt-BR"):"—";
+  });
+  db.collection("pf_afiliados").doc(AF.id).collection("vendas").orderBy("em","desc").limit(50).get().then(function(q){
+    var h=$("pHist");h.textContent="";
+    if(q.empty){var c=document.createElement("div");c.className="card sub";c.textContent="Nenhuma comissão ainda. Compartilhe o seu link!";h.appendChild(c);return}
+    q.forEach(function(doc){var v=doc.data(),c=document.createElement("div");c.className="card row";
+      var l=document.createElement("div"),b=document.createElement("b");b.textContent=v.loja||"Loja indicada";
+      var br=document.createElement("br"),sp=document.createElement("span");sp.className="sub";sp.style.fontSize="13px";sp.textContent=new Date(v.em).toLocaleDateString("pt-BR");
+      l.appendChild(b);l.appendChild(br);l.appendChild(sp);
+      var r=document.createElement("div");r.style.textAlign="right";
+      var m=document.createElement("b");m.textContent=money(v.valor);
+      var ch=document.createElement("div");var s=document.createElement("span");s.className="chip"+(v.pago?" p":"");s.textContent=v.pago?"Pago":"A receber";ch.appendChild(s);
+      r.appendChild(m);r.appendChild(ch);c.appendChild(l);c.appendChild(r);h.appendChild(c)});
+  }).catch(function(e){var h=$("pHist");h.textContent="";var c=document.createElement("div");c.className="card sub";c.textContent=fbErr(e);h.appendChild(c)});
+}
+$("bCopiar").onclick=function(){var lk=linkDe(AF),b=$("bCopiar"),ok=function(){b.textContent="Copiado ✓";setTimeout(function(){b.textContent="Copiar link"},1800)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(lk).then(ok).catch(fb)}else fb();
+  function fb(){var t=document.createElement("textarea");t.value=lk;document.body.appendChild(t);t.select();try{document.execCommand("copy");ok()}catch(e){}document.body.removeChild(t)}};
+$("bSalvar").onclick=function(){
+  var nm=$("dn").value.trim(),wp=$("dw").value.replace(/\D/g,""),px=$("dp").value.trim();
+  if(nm.length<2){msg("eSalvar","Informe o seu nome.");return}
+  if(wp.length<10){msg("eSalvar","Informe o WhatsApp com DDD.");return}
+  msg("eSalvar","");$("bSalvar").disabled=true;
+  db.collection("pf_afiliados").doc(AF.id).update({nome:nm,wpp:wp,pix:px}).then(function(){AF.nome=nm;AF.wpp=wp;AF.pix=px;$("pNome").textContent=nm;$("bSalvar").disabled=false;msg("eSalvar","Dados salvos ✓",true)}).catch(function(e){$("bSalvar").disabled=false;msg("eSalvar",fbErr(e))});
+};
+})();
+</script>
+<p style="text-align:center;color:#a3a3ad;font-size:14px;margin:24px 0 12px">Desenvolvido por <strong>Yaudimtec Soluções Digital</strong></p>
+</body>
+</html>

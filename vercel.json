@@ -1,0 +1,156 @@
+{
+  "rewrites": [
+    {
+      "source": "/app/:role(adm|loja|cozinha|garcom|entregas)",
+      "destination": "/app/:role/index.html"
+    },
+    {
+      "source": "/app/:role(adm|loja|cozinha|garcom|entregas)/",
+      "destination": "/app/:role/index.html"
+    },
+    {
+      "source": "/_og/:slug([a-z0-9-]{1,40})",
+      "destination": "/api/loja?og=:slug"
+    },
+    {
+      "source": "/equipe/:slug([a-z0-9-]{1,40})",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/criador",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/afiliado",
+      "destination": "/afiliado.html"
+    },
+    {
+      "source": "/gestao",
+      "destination": "/gestao/index.html"
+    },
+    {
+      "source": "/gestao/:path*",
+      "destination": "/gestao/:path*"
+    },
+    {
+      "source": "/:slug([a-z0-9-]{1,40})",
+      "destination": "/api/loja?slug=:slug"
+    }
+  ],
+  "functions": {
+    "api/loja.js": {
+      "includeFiles": "index.html",
+      "maxDuration": 10
+    },
+    "api/pedido.js": {
+      "maxDuration": 10
+    },
+    "api/baixa.js": {
+      "maxDuration": 10
+    },
+    "api/mesa.js": {
+      "maxDuration": 10
+    },
+    "api/caixa.js": {
+      "maxDuration": 10
+    }
+  },
+  "headers": [
+    {
+      "source": "/og-default.png",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    },
+    {
+      "source": "/icons/:f",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    },
+    {
+      "source": "/manifest-adm.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/manifest-lojista.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/manifest-cozinha.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/manifest-garcom.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/manifest-motoboy.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ]
+}
