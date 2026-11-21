@@ -1,17 +1,12 @@
 {
-  "name": "espaco-pede-facil",
+  "name": "pede-facil-saas",
   "private": true,
-  "engines": {
-    "node": ">=18"
-  },
-  "scripts": {
-    "test": "node tests/loja.test.js && node tests/rotas.test.js && node tests/gestao.test.js && node tests/pedido.test.js && node tests/mesa.test.js && node tests/permissoes.test.js && node tests/limite.test.js && node tests/caixa.test.js && node tests/entrega.test.js && node tests/apk.test.js && node tests/nativo.test.js && node tests/baixa.test.js && node tests/fila.test.js && node tests/instalar.test.js && node tests/atalho.test.js && node tests/instalacao.test.js && node tests/emulador.test.js && node tests/qualidade.test.js",
-    "emulador": "firebase emulators:start --only firestore --project demo-pedefacil",
-    "test:regras": "firebase emulators:exec --only firestore --project demo-pedefacil \"node tests/regras.emulador.test.js\""
-  },
-  "devDependencies": {
-    "@firebase/rules-unit-testing": "^3.0.4",
-    "firebase": "^10.14.1",
-    "firebase-tools": "^13.29.0"
+  "scripts": { "dev": "next dev", "build": "next build", "start": "next start" },
+  "dependencies": {
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.0",
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
