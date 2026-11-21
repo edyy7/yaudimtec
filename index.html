@@ -732,8 +732,8 @@ var PF_FIREBASE={
   measurementId:"G-KYQRSY9V5H"
 };
 /* O login e o banco reais só ligam nestes endereços (e em espacopedefacil*.vercel.app), os mesmos autorizados no Firebase. Em qualquer outro lugar, o app roda em modo demonstração. */
-var PF_HOSTS=["espacopedefacil.com.br","www.espacopedefacil.com.br","delivery-67d14.web.app","delivery-67d14.firebaseapp.com","localhost","127.0.0.1"];
-var PF_ON=!!PF_FIREBASE.apiKey&&(PF_HOSTS.indexOf(location.hostname)>-1||/^espaco-?pede-?facil[a-z0-9-]*\.vercel\.app$/.test(location.hostname));
+var PF_HOSTS=["espacopedefacil.com.br","www.espacopedefacil.com.br","yaudimtec.com.br","www.yaudimtec.com.br","app.yaudimtec.com.br","delivery-67d14.web.app","delivery-67d14.firebaseapp.com","localhost","127.0.0.1"];
+var PF_ON=!!PF_FIREBASE.apiKey&&(PF_HOSTS.indexOf(location.hostname)>-1||/^(espaco-?pede-?facil|yaudimtec)[a-z0-9-]*\.vercel\.app$/.test(location.hostname));
 var ONB=false,ACCT=null;
 function onbScreen(){var h='<h1>Qual é o seu negócio?</h1><p class="sub">Escolha o segmento e o tipo de loja. Carregamos 20 itens prontos do seu nicho e levamos você direto ao painel.</p>';
 if(NSEG===null)h+=SEGS.map(function(x,i){return '<button class="ghost" style="width:100%;margin-bottom:10px;text-align:left" data-nseg="'+i+'">'+esc(x[0])+'</button>'}).join("");
