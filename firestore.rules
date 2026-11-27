@@ -48,6 +48,50 @@ service cloud.firestore {
     function isLoja(oid)    { return hasRole(oid, 'ped'); }  // Loja da equipe (gerente/balcão): LÊ e OPERA pedidos (Pix, status, forma de pagamento) e o caixa; nunca altera dados da loja, preços, equipe nem exclui pedidos
     function isStaff(oid)   { return isCozinha(oid) || isGarcom(oid) || isEntrega(oid); }
 
+    // ---------- PLANO B do pedido (cliente sem login) ----------
+    // Caminho normal: o cliente manda o pedido para /api/pedido (o servidor confere preço e estoque e grava).
+    // Só se o servidor falhar (erro 404 ou 5xx) o app grava o pedido direto, como no Espaço Pede Fácil.
+    // O pedido do plano B leva fb == true e só passa se tiver exatamente os campos abaixo, com tamanhos limitados.
+    // O servidor NÃO confere o valor aqui: a loja vê o aviso "Enviado sem conferência do servidor" no pedido.
+    // Pix nasce pendente (pend) e pagamento no local nasce liberado (ok), a mesma regra do servidor.
+    function pedidoDiretoOk(oid, pid) {
+      let d = request.resource.data;
+      return d.get('fb', false) == true
+        && d.keys().hasOnly(['id', 'tt', 'name', 'phone', 'items', 'total', 'sinal', 'tipo', 'pag', 'ent', 'addr', 'obs', 'lin', 'st', 'fase', 'prontoEm', 'fb'])
+        && d.keys().hasAll(['id', 'tt', 'name', 'phone', 'items', 'total', 'pag', 'ent', 'st', 'fase', 'fb'])
+        && exists(/databases/$(database)/documents/pf_lojas_publicas/$(oid))
+        && d.id is number && string(d.id) == pid
+        && d.tt is string && d.tt.matches('[a-f0-9]{32}')
+        && d.name is string && d.name.size() >= 2 && d.name.size() <= 80
+        && d.phone is string && d.phone.size() >= 8 && d.phone.size() <= 30
+        && d.items is string && d.items.size() >= 1 && d.items.size() <= 3000
+        && d.total is number && d.total >= 0 && d.total <= 100000
+        && d.get('sinal', 0) is number && d.get('sinal', 0) >= 0 && d.get('sinal', 0) <= d.total
+        && d.get('tipo', 'sinal') in ['total', 'sinal']
+        && d.pag in ['pix', 'local']
+        && ((d.pag == 'pix' && d.st == 'pend') || (d.pag == 'local' && d.st == 'ok'))
+        && d.ent in ['retirada', 'entrega']
+        && d.get('addr', '') is string && d.get('addr', '').size() <= 300
+        && (d.ent != 'entrega' || d.get('addr', '').size() >= 5)
+        && d.get('obs', '') is string && d.get('obs', '').size() <= 300
+        && d.get('lin', []) is list && d.get('lin', []).size() <= 60
+        && d.fase in ['novo', 'pronto']
+        && (d.fase == 'novo' || d.get('prontoEm', 0) is number);
+    }
+    // rastreio do pedido do plano B: só se o pedido fb já existe e o código (tt) e a fase batem com ele
+    function rastreioDiretoOk(tk) {
+      let r = request.resource.data;
+      let pp = /databases/$(database)/documents/pf_lojas/$(r.oid)/pedidos/$(string(r.id));
+      return r.keys().hasOnly(['oid', 'id', 'fase', 'st', 'ent', 'nome', 'loja', 'upd'])
+        && r.keys().hasAll(['oid', 'id', 'fase', 'st', 'ent', 'upd'])
+        && exists(pp)
+        && get(pp).data.get('fb', false) == true
+        && get(pp).data.get('tt', '') == tk
+        && get(pp).data.get('fase', '') == r.fase
+        && get(pp).data.get('st', '') == r.st
+        && get(pp).data.get('ent', '') == r.ent;
+    }
+
     // ---------- endereço da loja (/nome-da-loja) ----------
     match /pf_slugs/{slug} {
       allow get: if true;
@@ -86,7 +130,7 @@ service cloud.firestore {
       match /pedidos/{pid} {
         // pedido de mesa/balcão do garçom: também só pelo servidor (/api/mesa), que recalcula o preço e reserva o estoque.
         // O garçom NÃO grava pedido direto (auditoria A-03): só o dono cria aqui.
-        allow create: if isOwner(uid);
+        allow create: if isOwner(uid) || pedidoDiretoOk(uid, pid);
         // LEITURA POR FUNÇÃO (a consulta do app precisa ter o mesmo filtro, senão o Firestore nega a lista toda):
         //   garçom   → where garcom_uid == uid
         //   cozinha  → where fase in ['novo','preparo','pronto'] e st == 'ok' (Pix pendente não aparece; B-05)
@@ -205,8 +249,8 @@ service cloud.firestore {
     match /pf_rastreio/{tk} {
       allow get: if true;
       allow list: if false;
-      // só o servidor (/api/pedido, conta de serviço) cria o rastreio
-      allow create: if false;
+      // o servidor (/api/pedido, conta de serviço) cria o rastreio; no plano B o app cria, só se o pedido fb já existe (rastreioDiretoOk)
+      allow create: if rastreioDiretoOk(tk);
       // dono: fase e pagamento. Equipe: SÓ a fase, e só a transição da própria função (nunca o pagamento "st")
       allow update: if (isOwner(resource.data.oid)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fase', 'st', 'upd']))

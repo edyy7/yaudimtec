@@ -52,6 +52,25 @@ module.exports = async (req, res) => {
       res.setHeader("Cache-Control", "public, max-age=600, s-maxage=3600");
       return res.status(200).send(img.buf);
     }
+    if (q.manifest) { // app do Cliente: /_manifest/<slug>
+      const ms = lib.slugFromPath("/" + one(q.manifest));
+      const MS = ms ? await loadStore(ms, origin) : null;
+      if (!MS) { res.statusCode = 404; return res.end("{}"); }
+      const nome = String(MS.nome || "").trim() || "Loja";
+      const cor = MS.theme && /^#[0-9a-fA-F]{6}$/.test(MS.theme.c1 || "") ? MS.theme.c1 : "#047857";
+      res.setHeader("Content-Type", "application/manifest+json; charset=utf-8");
+      res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
+      return res.status(200).send(JSON.stringify({
+        id: "/" + ms, name: nome, short_name: nome.slice(0, 24), description: "Peça de " + nome + " pelo aplicativo.",
+        start_url: "/" + ms, scope: "/" + ms, display: "standalone", orientation: "portrait",
+        background_color: "#ffffff", theme_color: cor, lang: "pt-BR",
+        icons: [
+          { src: "/icons/cliente-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "/icons/cliente-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "/icons/cliente-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      }));
+    }
     const slug = lib.slugFromPath("/" + one(q.slug));
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     if (!slug) {

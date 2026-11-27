@@ -67,6 +67,15 @@ async function getDoc(path, tk) {
   const j = await r.json();
   return j.fields || null;
 }
+
+// Como getDoc, mas NÃO confunde erro do Google com "não existe": 404 -> null; qualquer outra falha lança erro com .fsStatus.
+async function getDocE(path, tk) {
+  const r = await fetch(base() + path, { headers: { Authorization: "Bearer " + tk } });
+  if (r.status === 404) return null;
+  if (!r.ok) { const e = new Error("firestore_" + r.status); e.fsStatus = r.status; throw e; }
+  const j = await r.json();
+  return j.fields || null;
+}
 // "ok" criado · "existe" já havia um documento com esse id · "erro"
 async function createDoc(col, id, obj, tk) {
   const r = await fetch(base() + col + "?documentId=" + encodeURIComponent(id), {
@@ -197,4 +206,4 @@ async function listaDocs(col, tk) {
     });
   } catch (e) { return null; }
 }
-module.exports = { begin, rollback, getDocTx, commit, wCria, wApaga, wMarca, wSoma, wDefine, idToken, listaDocs, nome, token, base, toFs, fromFs, tsKey, fields, str, getDoc, createDoc, pedidosDesde, delDoc, _reset };
+module.exports = { begin, rollback, getDocTx, commit, wCria, wApaga, wMarca, wSoma, wDefine, idToken, listaDocs, nome, token, base, toFs, fromFs, tsKey, fields, str, getDoc, getDocE, createDoc, pedidosDesde, delDoc, _reset };

@@ -1,0 +1,10 @@
+Fotos dos itens de cada nicho (aparecem sozinhas no app)
+
+Formato do arquivo:  img/<nicho>/<NN>.webp   (ex.: img/pizza/01.webp, img/lanche/12.webp)
+  - <nicho> é o nome da pasta (já criadas aqui); <NN> é o número do item, de 01 a 20.
+  - A lista de itens, os nomes e os prompts de cada imagem estão em prompts/PROMPTS_IMAGENS_NICHOS.html
+  - Quadrado 1:1, 1024x1024 ou 1200x1200, até ~150 KB, produto centralizado com margem.
+  - Sem logos de marcas e sem texto legível. Use apenas imagens que você criou ou tem direito de usar.
+
+Enquanto uma imagem não existir, o app mostra o ícone do item (nada quebra).
+Depois de colocar as imagens na pasta, faça o deploy normalmente.

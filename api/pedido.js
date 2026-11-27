@@ -9,6 +9,7 @@
 //  - grava com credencial de servidor (conta de serviço); as regras do Firestore negam gravação direta de cliente.
 const fsx = require("./_fs");
 const limite = require("./limite");
+const baixa = require("./baixa");
 
 const txt = (v, n) => (typeof v === "string" ? v.slice(0, n) : "");
 class Rej extends Error { constructor(code, erro, extra) { super(erro); this.code = code; this.erro = erro; this.extra = extra || {}; } }
@@ -219,17 +220,17 @@ module.exports = async (req, res) => {
     const tk = await fsx.token();
     if (!tk) return send(503, { erro: "servidor_sem_credencial" });
 
-    const sl = await fsx.getDoc("pf_slugs/" + encodeURIComponent(slug), tk);
+    const sl = await fsx.getDocE("pf_slugs/" + encodeURIComponent(slug), tk);
     const uid = sl && fsx.str(sl.uid);
     if (!uid) return send(404, { erro: "loja_nao_encontrada" });
-    const pb = await fsx.getDoc("pf_lojas_publicas/" + encodeURIComponent(uid), tk);
+    const pb = await fsx.getDocE("pf_lojas_publicas/" + encodeURIComponent(uid), tk);
     if (!pb) return send(404, { erro: "loja_nao_encontrada" });
     let S;
     try { S = JSON.parse(fsx.str(pb.data) || ""); } catch (e) { return send(502, { erro: "loja_ilegivel" }); }
     if (!S || typeof S !== "object") return send(502, { erro: "loja_ilegivel" });
 
     // M-02: reenvio do MESMO pedido (mesmo token de rastreio), mesmo com outro id, devolve o pedido que já existe: não duplica
-    const ja = await fsx.getDoc("pf_rastreio/" + o.tt, tk);
+    const ja = await fsx.getDocE("pf_rastreio/" + o.tt, tk);
     if (ja) {
       if (fsx.str(ja.oid) !== uid) return send(409, { erro: "token_em_uso" });
       const idEx = Number(fsx.fromFs(ja.id)), pd = idEx ? await fsx.getDoc("pf_lojas/" + uid + "/pedidos/" + idEx, tk) : null;
@@ -276,13 +277,16 @@ module.exports = async (req, res) => {
     for (let i = 0; i < 3 && !cOk; i++) {
       cOk = (await fsx.createDoc("pf_lojas/" + uid + "/pedidos/" + id + "/contato", "dados", { phone: o.phone, addr: o.addr }, tk)) === "ok";
     }
-    if (!cOk) { try { await fsx.delDoc("pf_lojas/" + uid + "/pedidos/" + id, tk); } catch (e) { /* o erro abaixo já faz o app reenviar */ } return send(502, { erro: "gravacao" }); }
+    if (!cOk) { try { await baixa.processa("excluir", uid, id, tk); /* apaga o pedido E devolve a reserva de estoque */ } catch (e) { /* o erro abaixo já faz o app reenviar */ } return send(502, { erro: "gravacao" }); }
     await fsx.createDoc("pf_rastreio", o.tt, {
       oid: uid, id, fase, st: o.st, ent: o.ent,
       nome: o.name.split(" ")[0].slice(0, 40), loja: txt(S.nome, 60), upd: Date.now(),
     }, tk);
     return send(200, { ok: true, id, tracking_token: o.tt, total: calc.total, sinal: pg.sinal });
   } catch (e) {
+    const st = e && e.fsStatus;
+    if (st === 401 || st === 403) return send(503, { erro: "firestore_sem_permissao" });
+    if (st) return send(503, { erro: "firestore_indisponivel" });
     return send(502, { erro: "falha" });
   }
 };

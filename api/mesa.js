@@ -13,7 +13,7 @@ const ped = require("./pedido");
 const { Rej, txt } = ped;
 const r2 = (n) => Math.round(n * 100) / 100;
 const MAX_PESSOAS = 30, MAX_LINHAS = 60, JANELA_ID = 10 * 60e3;
-const PAPEL_PEDIDO = ["mesas"];            // quem lança pedido de mesa/balcão
+const PAPEL_PEDIDO = ["mesas", "garcom"];            // quem lança pedido de mesa/balcão
 const PAPEL_COMISSAO = ["mesas", "ped"];   // quem encerra conta (garçom ou Loja da equipe)
 
 // papel de quem chama: "dono" | papel da equipe aprovada | null. Devolve também o nome gravado pelo dono na equipe.

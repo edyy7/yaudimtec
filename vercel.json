@@ -1,4 +1,8 @@
 {
+  "framework": null,
+  "buildCommand": null,
+  "installCommand": null,
+  "outputDirectory": ".",
   "rewrites": [
     {
       "source": "/app/:role(adm|loja|cozinha|garcom|entregas)",
@@ -7,6 +11,10 @@
     {
       "source": "/app/:role(adm|loja|cozinha|garcom|entregas)/",
       "destination": "/app/:role/index.html"
+    },
+    {
+      "source": "/_manifest/:slug([a-z0-9-]{1,40})",
+      "destination": "/api/loja?manifest=:slug"
     },
     {
       "source": "/_og/:slug([a-z0-9-]{1,40})",
@@ -56,6 +64,15 @@
     }
   },
   "headers": [
+    {
+      "source": "/og-yaudimtec.png",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    },
     {
       "source": "/og-default.png",
       "headers": [

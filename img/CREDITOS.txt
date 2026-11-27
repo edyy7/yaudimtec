@@ -1,0 +1,7 @@
+Créditos das fotos (Unsplash, licença gratuita para uso comercial)
+
+pizza/01 Mussarela   - Foto de ABHISHEK HAJARE (@abhishek_hajare) no Unsplash - https://unsplash.com/photos/0UcHlaN-hgQ
+pizza/02 Calabresa   - Foto de David Foodphototasty (@phototastyfood) no Unsplash - https://unsplash.com/photos/xIqVfW8XUt4
+pizza/07 Pepperoni   - Foto de Farhad Ibrahimzade (@ferhadd) no Unsplash - https://unsplash.com/photos/dFE0FNVd4k0
+
+Como funciona: se existir o arquivo local img/<negocio>/NN.webp, ele é usado. Se não existir, o app usa a foto do Unsplash listada em PF_FOTOS (index.html). Se nenhuma carregar, aparece o ícone.

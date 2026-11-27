@@ -1,5 +1,5 @@
 /* Yaudimtec: uso offline do aplicativo (guarda o app e as fotos no aparelho) */
-const V = "pf-v7";
+const V = "pf-v8";
 const ROLE = /^\/app\/(adm|loja|cozinha|garcom|entregas)\//;
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(V).then((c) => c.addAll(["/", "/og-default.png"])).then(() => self.skipWaiting()));

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dossiê · Pedido que não chega na cozinha · Yaudimtec</title>
+<style>
+:root{
+  --papel:#f2f5f3; --cartao:#ffffff; --tinta:#14201b; --suave:#51615a; --linha:#d3dcd7;
+  --ok:#1b7a4b; --ok-fundo:#dff1e6; --aviso:#8a5a00; --aviso-fundo:#fbeccb; --risco:#a32a2a; --risco-fundo:#f8dcdc;
+}
+@media (prefers-color-scheme:dark){
+  :root{--papel:#0f1613; --cartao:#17211c; --tinta:#e8f0ec; --suave:#9fb2a9; --linha:#2b3a33;
+    --ok:#62d19a; --ok-fundo:#16362a; --aviso:#f0bd55; --aviso-fundo:#3a2d0f; --risco:#f08a8a; --risco-fundo:#3b1b1b;}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--papel);color:var(--tinta);font:17px/1.55 "Avenir Next","Segoe UI",system-ui,sans-serif;
+  padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(40px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+main{max-width:760px;margin:0 auto}
+h1{font:700 29px/1.15 Georgia,"Times New Roman",serif;margin:6px 0 6px;letter-spacing:-.01em}
+h2{font:700 21px/1.25 Georgia,"Times New Roman",serif;margin:34px 0 10px}
+h3{font-size:17px;margin:20px 0 6px}
+p{margin:8px 0}
+.sub{color:var(--suave);margin:0 0 16px}
+a{color:var(--ok)}
+code{font:15px/1.4 ui-monospace,Menlo,Consolas,monospace;background:var(--cartao);border:1px solid var(--linha);border-radius:6px;padding:1px 6px;overflow-wrap:anywhere}
+.cartao{background:var(--cartao);border:1px solid var(--linha);border-radius:12px;padding:14px 16px;margin:12px 0}
+/* comanda: o resumo no formato de talão de cozinha */
+.comanda{background:var(--cartao);border:2px dashed var(--tinta);border-radius:6px;padding:16px 18px;margin:18px 0}
+.comanda .linha{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:7px 0;border-bottom:1px dotted var(--linha)}
+.comanda .linha:last-child{border-bottom:0}
+.comanda b.n{font:700 24px/1 Georgia,serif;white-space:nowrap}
+.n.ok{color:var(--ok)} .n.av{color:var(--aviso)}
+.barra{height:10px;border-radius:99px;background:var(--linha);overflow:hidden;margin-top:6px}
+.barra i{display:block;height:100%;background:var(--ok)}
+.barra i.av{background:var(--aviso)}
+.etq{display:inline-block;border-radius:99px;padding:1px 10px;font-size:14px;font-weight:600}
+.etq.ok{background:var(--ok-fundo);color:var(--ok)}
+.etq.av{background:var(--aviso-fundo);color:var(--aviso)}
+.etq.rs{background:var(--risco-fundo);color:var(--risco)}
+.rolagem{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15.5px;background:var(--cartao)}
+th,td{border:1px solid var(--linha);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--papel)}
+ol,ul{padding-left:22px;margin:8px 0}
+li{margin:6px 0}
+.aviso{border-left:5px solid var(--aviso);background:var(--aviso-fundo);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.risco{border-left:5px solid var(--risco);background:var(--risco-fundo);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.ok-box{border-left:5px solid var(--ok);background:var(--ok-fundo);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+footer{margin-top:40px;color:var(--suave);font-size:15px}
+:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+
+<h1>O pedido do cliente não chegava na cozinha</h1>
+<p class="sub">Dossiê do Yaudimtec · 22/11/2026 · registro do que foi verificado, do que foi alterado e do que falta fazer.</p>
+
+<div class="comanda" role="group" aria-label="Resumo em porcentagem">
+  <div class="linha"><span>Código do plano B pronto<br><small>7 de 7 itens, nos 6 arquivos do app</small></span><b class="n ok">100%</b></div>
+  <div class="linha"><span>Testes automáticos<br><small>50 de 50 passaram (no pacote original, 41 falham)</small></span><b class="n ok">100%</b></div>
+  <div class="linha"><span>Testado no ar (Vercel e Firebase de verdade)<br><small>depende de você publicar as regras e o deploy</small></span><b class="n av">0%</b></div>
+</div>
+<div class="barra" aria-hidden="true"><i style="width:100%"></i></div>
+<p class="sub" style="margin-top:6px">Código e testes automáticos: 100%. Teste no ar: 0%, ainda não feito.</p>
+
+<h2>Resposta curta</h2>
+<div class="cartao">
+  <p>O <b>Espaço Pede Fácil</b> funciona porque o cliente grava o pedido <b>direto no banco</b>. Ele não depende de servidor.</p>
+  <p>O <b>Yaudimtec</b> manda o pedido para o servidor (<code>/api/pedido</code>). Esse servidor só funciona com a chave <code>PF_SA_JSON</code> na Vercel. Sem a chave, o app mostra “Sem conexão com o servidor” e o pedido nunca chega ao banco, então a cozinha não vê.</p>
+  <p>Você escolheu o <b>modo híbrido</b>: tenta o servidor e, se ele falhar, grava direto como o Fácil. É isso que foi feito.</p>
+</div>
+
+<h2>1. O que foi verificado</h2>
+
+<h3>1.1 Diferença entre os dois pacotes</h3>
+<div class="rolagem"><table>
+<tr><th></th><th>Espaço Pede Fácil (12/11)</th><th>Yaudimtec completo (21 e 22/11)</th></tr>
+<tr><td>Como o pedido sai do cliente</td><td>grava direto no Firestore</td><td>envia para <code>/api/pedido</code></td></tr>
+<tr><td>API na Vercel</td><td>só <code>loja.js</code> e <code>_lib.js</code></td><td><code>pedido</code>, <code>mesa</code>, <code>baixa</code>, <code>caixa</code>, <code>saude</code> e outras</td></tr>
+<tr><td>Cozinha (KDS)</td><td>não existe no código enviado</td><td>existe: novo, em preparo e pronto</td></tr>
+<tr><td>Rastreio do pedido pelo cliente</td><td>não tem</td><td>tem (código de 32 letras e números)</td></tr>
+<tr><td>Cópia pública da loja</td><td><code>pf_lojas</code></td><td><code>pf_lojas_publicas</code></td></tr>
+</table></div>
+<p>O ZIP do Fácil leva o pedido só até a aba Pedidos da loja. Para a cozinha, o modelo é o próprio Yaudimtec.</p>
+
+<h3>1.2 Caminho do pedido até a cozinha (Yaudimtec)</h3>
+<ol>
+  <li>O cliente finaliza e o app chama <code>/api/pedido</code>.</li>
+  <li>O servidor confere preço, estoque e horário, e grava o pedido com a fase e o status do pagamento.</li>
+  <li>A cozinha só lê pedidos com status liberado (<code>ok</code>) e fase novo, preparo ou pronto. Isso está no app e nas regras do Firestore.</li>
+</ol>
+
+<h3>1.3 Onde o pedido pode se perder (em ordem de probabilidade)</h3>
+<ol>
+  <li><b>Falta a chave <code>PF_SA_JSON</code> na Vercel</b> (ou faltou o Redeploy depois de criar). O servidor responde 503.</li>
+  <li><b>Cozinha ligada em Módulos mas não salva na nuvem.</b> O servidor lê a cópia pública, que só é enviada quando você toca em Salvar. Sem isso o pedido nasce “pronto” e pula a cozinha.</li>
+  <li><b>Pagamento com Pix:</b> o pedido nasce pendente e só vai para a cozinha depois de “Pix Confirmado”. Isso é de propósito.</li>
+  <li><b>Loja fora do modo Cardápio:</b> não existe cozinha e o pedido nasce “pronto”.</li>
+  <li><b>Loja fechada ou estoque insuficiente:</b> o servidor recusa.</li>
+  <li><b>Equipe da cozinha sem aprovação</b> em ADM → Equipe, ou usando o app de outra função.</li>
+</ol>
+<div class="aviso">Os itens 2 a 6 já eram assim e continuam valendo no plano B. O plano B só resolve o item 1 (servidor fora do ar ou sem chave).</div>
+
+<h3>1.4 Outras verificações feitas</h3>
+<ul>
+  <li>As 6 cópias do app (<code>index.html</code> e <code>app/adm, loja, cozinha, garcom, entregas</code>) têm o mesmo código do pedido: as alterações foram idênticas nas 6 e os testes conferem isso.</li>
+  <li><code>sw.js</code> busca o app na rede primeiro, então não precisou mudar a versão do cache.</li>
+  <li>Todos os arquivos da pasta <code>api/</code> continuam com sintaxe válida e <b>não foram alterados</b>.</li>
+  <li>Teste pronto do servidor: <code>/api/saude?slug=nome-da-loja</code> diz em português qual dos itens acima está falhando.</li>
+</ul>
+
+<h3>1.5 Pontos que notei e NÃO alterei</h3>
+<ul>
+  <li>O e-mail do Criador e a chave pública do Firebase estão escritos dentro do <code>index.html</code>.</li>
+  <li>A pasta <code>img/</code> só tem o LEIA-ME, sem fotos. O app mostra o ícone no lugar.</li>
+  <li>A mensagem de erro de permissão cita “LEIA-ME, passo 4”, mas o ZIP não traz esse LEIA-ME.</li>
+  <li>O convite da equipe diz “vale por 7 dias” num texto e “90 dias” em outro.</li>
+  <li>Qualquer correção no app precisa ser repetida nas 6 cópias.</li>
+</ul>
+
+<h2>2. O que foi alterado</h2>
+<div class="rolagem"><table>
+<tr><th>Arquivo</th><th>O que mudou</th></tr>
+<tr><td>6 arquivos do app<br><small>index.html e app/*/index.html</small></td><td>
+  <b>Plano B do envio:</b> se o servidor responder 404 ou erro 5xx, grava o pedido direto no banco (como o Fácil) e cria o rastreio.<br>
+  <b>Fila do aparelho:</b> pedido guardado por falta de internet também usa o plano B se o servidor continuar com erro.<br>
+  <b>Aviso na aba Pedidos:</b> pedido do plano B mostra “Enviado sem conferência do servidor: confira o valor”.</td></tr>
+<tr><td><code>firestore.rules</code></td><td>Duas funções novas (<code>pedidoDiretoOk</code> e <code>rastreioDiretoOk</code>) que liberam o cliente a criar <b>só</b> o pedido do plano B e o rastreio dele.</td></tr>
+<tr><td><code>tests/fallback.test.js</code> (novo)</td><td>50 testes automáticos. Rode com <code>node tests/fallback.test.js</code>.</td></tr>
+<tr><td><code>.vercelignore</code> (novo)</td><td>Impede que <code>tests/</code> e <code>docs/</code> (este dossiê) sejam publicados no site.</td></tr>
+</table></div>
+
+<h3>Regras do plano B</h3>
+<ul>
+  <li>O servidor continua sendo o <b>primeiro</b> caminho. O plano B só entra com erro 404 ou 5xx.</li>
+  <li><b>Não</b> entra em recusas legítimas: loja fechada, estoque, preço diferente (422) e muitos pedidos (429).</li>
+  <li><b>Sem internet</b> (status 0): continua na fila de antes, sem plano B.</li>
+  <li>Pix sempre nasce pendente. Pagamento no local nasce liberado e vai para a cozinha.</li>
+  <li>Se o banco também recusar: com erro 5xx o pedido fica na fila; com 404 o cliente vê a mensagem de erro.</li>
+</ul>
+
+<h2>3. Riscos do plano B (você aceitou)</h2>
+<div class="risco">
+<ul>
+  <li><b>O valor do pedido não é conferido.</b> O cliente informa o total e as regras só limitam o tamanho. Por isso o aviso amarelo aparece para a loja.</li>
+  <li><b>Não há limite de pedidos por pessoa</b> no plano B (o servidor tinha). Alguém pode criar pedidos falsos.</li>
+  <li><b>Telefone e endereço ficam dentro do pedido</b> (como no Fácil). A cozinha consegue ler esses dados nos pedidos do plano B. No caminho normal, ficam separados.</li>
+  <li><b>Estoque não é reservado</b> no plano B. O abate é feito depois, pelo painel do lojista.</li>
+</ul>
+</div>
+<p>Se o servidor estiver configurado certo, o plano B quase não é usado. Ele é a rede de segurança.</p>
+
+<h2>4. Testes</h2>
+<div class="rolagem"><table>
+<tr><th>Grupo</th><th>Testes</th><th>Resultado</th></tr>
+<tr><td>Os 6 arquivos têm o mesmo plano B, scripts com sintaxe válida e aviso presente</td><td>18</td><td><span class="etq ok">18 ok</span></td></tr>
+<tr><td>Envio: servidor 200, 404, 500, 502, 503, recusas legítimas, sem internet, banco recusando</td><td>18</td><td><span class="etq ok">18 ok</span></td></tr>
+<tr><td>Fila do aparelho (inclusive fila de outra loja)</td><td>4</td><td><span class="etq ok">4 ok</span></td></tr>
+<tr><td>App e regras combinam (campos, Pix pendente, cozinha só lê liberado)</td><td>10</td><td><span class="etq ok">10 ok</span></td></tr>
+<tr><td><b>Total</b></td><td><b>50</b></td><td><span class="etq ok">50 ok · 0 falhas</span></td></tr>
+</table></div>
+<p>Prova de que o teste funciona: rodado no pacote <b>original</b>, 41 dos 50 falham.</p>
+<div class="aviso"><b>Não foi testado:</b> as regras do Firestore contra um emulador (aqui só foram conferidas por leitura do texto), o envio real na Vercel e no Firebase, e a tela no celular. Por isso o teste no ar está em 0%.</div>
+
+<h2>5. Como colocar no ar</h2>
+<ol>
+  <li><b>Regras:</b> Firebase Console → Firestore Database → Regras. Copie os blocos do <code>firestore.rules</code> novo (as funções <code>pedidoDiretoOk</code> e <code>rastreioDiretoOk</code>, e as duas linhas <code>allow create</code>) para dentro das regras do projeto <code>delivery-67d14</code> e toque em <b>Publicar</b>. Sem isso o plano B é recusado pelo banco.</li>
+  <li><b>Arquivos:</b> suba o ZIP novo na Vercel (substituindo tudo) e faça o deploy.</li>
+  <li><b>Chave do servidor:</b> Vercel → Settings → Environment Variables → confira <code>PF_SA_JSON</code> (o conteúdo inteiro do arquivo .json da conta de serviço do Firebase). Depois faça <b>Redeploy</b>.</li>
+  <li><b>Diagnóstico:</b> abra <code>seudominio/api/saude?slug=nome-da-loja</code> e leia o campo <code>resumo</code>.</li>
+  <li><b>Teste de verdade:</b> como cliente, faça um pedido pagando <b>na retirada/entrega</b>. Ele deve aparecer na cozinha (com a Cozinha ligada em ADM → Módulos e <b>salva</b>). Pedido com Pix só aparece depois de “Pix Confirmado”.</li>
+  <li><b>Como saber que o plano B foi usado:</b> o pedido mostra o aviso amarelo na aba Pedidos. Se aparecer sempre, o servidor ainda está com problema (volte ao passo 3).</li>
+</ol>
+
+<footer>Yaudimtec Soluções Digital · dossiê gerado em 22/11/2026. Nada além do plano B foi alterado: a pasta <code>api/</code> continua idêntica ao ZIP enviado.</footer>
+</main>
+</body>
+</html>
